@@ -13,7 +13,7 @@ and is purely intended as learning material.
 THREEjs is a rapidly changing JS library, and it tends to go through __major__ changes in some version increments, so I
 decided to explicitly put a copy of version *r132* as a static dependency, thus preventing possible breaks. This means
 that connecting this project with other `npm` managed projects might be a bit of a hassle. If you would like to do that,
-I recommend modifying the inline scripts. To use a module managed by `npm`, it really is a nobrainer.
+I recommend modifying the inline scripts to use a module managed by `npm`, it really is a no-brainer.
 
 ### Considerations regarding the scripts
 
