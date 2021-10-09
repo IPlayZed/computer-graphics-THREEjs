@@ -62,18 +62,18 @@
      * This is the only function needed to be changed explicitly depending on scene.
      */
     function objectSetup() {
-        let groundGeometry = new THREE.PlaneGeometry(100, 100);
+        let groundGeometry = new THREE.PlaneGeometry(10000, 10000);
         let wallGeometry = new THREE.BoxGeometry(30, 20, 30);
         let roofGeometry = new THREE.ConeGeometry(15, 10, 4);
         let entranceGeometry = new THREE.BoxGeometry(20, 2, 10);
         let pillarGeometry = new THREE.CylinderGeometry(1, 0.5, 22.5, 64);
 
         createMesh(groundGeometry, GROUND_MATERIAL_PROP);
-        let wallMesh = createMesh(wallGeometry, materialPropertiesCreator(0xD9E461));
-        let roofMesh = createMesh(roofGeometry, materialPropertiesCreator(0xFF0000));
-        let entranceMesh = createMesh(entranceGeometry, materialPropertiesCreator(0xDCE61C));
-        let leftPillarMesh = createMesh(pillarGeometry, materialPropertiesCreator(COLOR_WHITE));
-        let rightPillarMesh = createMesh(pillarGeometry, materialPropertiesCreator(COLOR_WHITE));
+        let wallMesh = createMesh(wallGeometry, materialPropertiesCreator(0xD9E461), false, GLOBAL_SHADOWS_ENABLED);
+        let roofMesh = createMesh(roofGeometry, materialPropertiesCreator(0xFF0000), GLOBAL_SHADOWS_ENABLED, GLOBAL_SHADOWS_ENABLED);
+        let entranceMesh = createMesh(entranceGeometry, materialPropertiesCreator(0xDCE61C), GLOBAL_SHADOWS_ENABLED, GLOBAL_SHADOWS_ENABLED);
+        let leftPillarMesh = createMesh(pillarGeometry, materialPropertiesCreator(COLOR_WHITE), GLOBAL_SHADOWS_ENABLED, GLOBAL_SHADOWS_ENABLED);
+        let rightPillarMesh = createMesh(pillarGeometry, materialPropertiesCreator(COLOR_WHITE), GLOBAL_SHADOWS_ENABLED, GLOBAL_SHADOWS_ENABLED);
 
 
         wallMesh.position.y += 15;
@@ -97,15 +97,24 @@
     }
 
     function lightSetup() {
-        // noinspection JSUnusedLocalSymbol
-        lightContainer.push(new THREE.AmbientLight(COLOR_WHITE, 0.7));
-        let pointLight = new THREE.PointLight(COLOR_WHITE, 1);
+        let pointLight = new THREE.PointLight(COLOR_WHITE, 0.8);
         pointLight.position.set(40, 40, 40);
         pointLight.decay = 2;
         pointLight.distance = 0;
+        pointLight.castShadow = GLOBAL_SHADOWS_ENABLED;
         pointLight.shadow.mapSize.width = OPTIMAL_SHADOW_MAP_RESOLUTION;
         pointLight.shadow.mapSize.height = OPTIMAL_SHADOW_MAP_RESOLUTION;
+
+        let spotLight = new THREE.SpotLight(0xE87D37, 1)
+        spotLight.position.set(50, 50, 50);
+        spotLight.angle = Math.PI / 9;
+        spotLight.target = meshContainer[1];
+        spotLight.castShadow = GLOBAL_SHADOWS_ENABLED;
+        spotLight.distance = 0;
+
+        lightContainer.push(new THREE.AmbientLight(0xFCE228, 0.4));
         lightContainer.push(pointLight);
+        lightContainer.push(spotLight);
         // TODO: finish light and add to scene
     }
 
@@ -113,7 +122,7 @@
         scene = new THREE.Scene();
     }
 
-    function materialPropertiesCreator(_color, _wireframe = true, _side = THREE.DoubleSide) {
+    function materialPropertiesCreator(_color, _wireframe = false, _side = THREE.FrontSide) {
         return {
             color: _color,
             wireframe: _wireframe,
@@ -155,14 +164,14 @@
         camera.lookAt(scene.position);
     }
 
-    function createMesh(geometry, materialProp) {
+    function createMesh(geometry, materialProp, castShadows = false, receiveShadow = false) {
         // The material type should be able to be selected based on a parameter.
-        let generatedMesh = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial(materialProp));
+        let generatedMesh = new THREE.Mesh(geometry, new THREE.MeshPhongMaterial(materialProp));
         /*  This shadow settings is only effective on an example like this. Consider making this changeable for
             complex scenes. Conditional branching is not a good idea for complex (sub)scenes imo.
          */
-        generatedMesh.castShadow = GLOBAL_SHADOWS_ENABLED;
-        generatedMesh.receiveShadow = GLOBAL_SHADOWS_ENABLED;
+        generatedMesh.castShadow = castShadows;
+        generatedMesh.receiveShadow = receiveShadow;
         meshContainer.push(generatedMesh);
         return generatedMesh;
     }
