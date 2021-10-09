@@ -30,9 +30,9 @@
     }
 
     const INITIAL_CAMERA_POS = {
-        x: 50,
-        y: 50,
-        z: 50
+        x: 100,
+        y: 100,
+        z: 100
     }
 
     show();
@@ -67,16 +67,22 @@
         let roofGeometry = new THREE.ConeGeometry(15, 10, 4);
         let entranceGeometry = new THREE.BoxGeometry(20, 2, 10);
         let pillarGeometry = new THREE.CylinderGeometry(1, 0.5, 22.5, 64);
+        let extraGeometry = new THREE.BoxGeometry(15, 15, 30);
 
-        createMesh(groundGeometry, GROUND_MATERIAL_PROP);
-        let wallMesh = createMesh(wallGeometry, materialPropertiesCreator(0xD9E461), false, GLOBAL_SHADOWS_ENABLED);
+        createMesh(groundGeometry, materialPropertiesCreator(0x00ff00, false, THREE.FrontSide, 20, 0x00ff00), false, true);
+        let wallMesh = createMesh(wallGeometry, materialPropertiesCreator(0xD9E461), GLOBAL_SHADOWS_ENABLED, GLOBAL_SHADOWS_ENABLED);
         let roofMesh = createMesh(roofGeometry, materialPropertiesCreator(0xFF0000), GLOBAL_SHADOWS_ENABLED, GLOBAL_SHADOWS_ENABLED);
         let entranceMesh = createMesh(entranceGeometry, materialPropertiesCreator(0xDCE61C), GLOBAL_SHADOWS_ENABLED, GLOBAL_SHADOWS_ENABLED);
         let leftPillarMesh = createMesh(pillarGeometry, materialPropertiesCreator(COLOR_WHITE), GLOBAL_SHADOWS_ENABLED, GLOBAL_SHADOWS_ENABLED);
         let rightPillarMesh = createMesh(pillarGeometry, materialPropertiesCreator(COLOR_WHITE), GLOBAL_SHADOWS_ENABLED, GLOBAL_SHADOWS_ENABLED);
+        let extraMesh = createMesh(extraGeometry, materialPropertiesCreator(0xFF0000), true, THREE.FrontSide, 10, COLOR_WHITE, GLOBAL_SHADOWS_ENABLED, GLOBAL_SHADOWS_ENABLED)
 
 
         wallMesh.position.y += 15;
+
+        extraMesh.position.y += 7.5;
+        extraMesh.position.x += 20;
+        extraMesh.position.z += 40;
 
         roofMesh.position.y += (wallMesh.position.y + 20);
         roofMesh.rotateX(THREE.MathUtils.degToRad(90));
@@ -98,23 +104,28 @@
 
     function lightSetup() {
         let pointLight = new THREE.PointLight(COLOR_WHITE, 0.8);
-        pointLight.position.set(40, 40, 40);
-        pointLight.decay = 2;
-        pointLight.distance = 0;
+        pointLight.position.set(50, 50, 70);
+        pointLight.decay = 2.5;
+
         pointLight.castShadow = GLOBAL_SHADOWS_ENABLED;
         pointLight.shadow.mapSize.width = OPTIMAL_SHADOW_MAP_RESOLUTION;
         pointLight.shadow.mapSize.height = OPTIMAL_SHADOW_MAP_RESOLUTION;
 
-        let spotLight = new THREE.SpotLight(0xE87D37, 1)
-        spotLight.position.set(50, 50, 50);
-        spotLight.angle = Math.PI / 9;
+        let spotLight = new THREE.SpotLight(COLOR_WHITE, 1)
+        spotLight.position.set(30, 50, 60);
+        spotLight.angle = Math.PI / 6;
+        spotLight.penumbra = 0.9
         spotLight.target = meshContainer[1];
         spotLight.castShadow = GLOBAL_SHADOWS_ENABLED;
-        spotLight.distance = 0;
+        spotLight.distance = 150;
+        spotLight.shadow.mapSize.width = OPTIMAL_SHADOW_MAP_RESOLUTION;
+        spotLight.shadow.mapSize.height = OPTIMAL_SHADOW_MAP_RESOLUTION;
 
-        lightContainer.push(new THREE.AmbientLight(0xFCE228, 0.4));
+        lightContainer.push(new THREE.AmbientLight(0xFCE228, 0.2));
         lightContainer.push(pointLight);
         lightContainer.push(spotLight);
+        lightContainer.push(new THREE.PointLightHelper(pointLight, 5));
+        lightContainer.push(new THREE.SpotLightHelper(spotLight));
         // TODO: finish light and add to scene
     }
 
@@ -122,9 +133,11 @@
         scene = new THREE.Scene();
     }
 
-    function materialPropertiesCreator(_color, _wireframe = false, _side = THREE.FrontSide) {
+    function materialPropertiesCreator(_color, _wireframe = false, _side = THREE.FrontSide, _shininess = 60, _specular = COLOR_WHITE) {
         return {
             color: _color,
+            shininess: _shininess,
+            specular: _specular,
             wireframe: _wireframe,
             side: _side
         };
