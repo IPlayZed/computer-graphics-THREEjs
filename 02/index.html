@@ -5,6 +5,179 @@
     <title>02</title>
 </head>
 <body>
+<script type="module">
+    import * as THREE from "../js-r132/build/three.module.js";
+    import {TrackballControls} from "../js-r132/examples/jsm/controls/TrackballControls.js";
 
+    let WIDTH, HEIGHT, aspectRatio;
+    let renderer;
+    let scene, camera;
+    let controls;
+    let meshContainer = [];
+
+    const COLOR_BLACK = 0x000000;
+    // noinspection JSUnusedGlobalSymbols
+    const COLOR_WHITE = 0xffffff;
+    const COLOR_GREEN = 0x00ff00;
+
+    const GROUND_MATERIAL_PROP = {
+        color: COLOR_GREEN,
+        wireframe: false,
+        side: THREE.DoubleSide
+    }
+
+    const INITIAL_CAMERA_POS = {
+        x: 50,
+        y: 50,
+        z: 50
+    }
+
+    show();
+
+    function show() {
+        init();
+        animate();
+    }
+
+    function init() {
+
+        windowSetup();
+        renderingSetup();
+        sceneSetup();
+        cameraSetup();
+
+        objectSetup();
+
+        adjustAndAddAllMeshesToScene();
+        window.addEventListener('resize', handleWindowResize, false);
+        cameraControlSetup();
+    }
+
+    function lightSetup() {
+        // noinspection JSUnusedLocalSymbols
+        let ambientLight = new THREE.AmbientLight(COLOR_WHITE, 0.7);
+        // TODO: finish light and add to scene
+    }
+
+    /***
+     * This is the only function needed to be changed explicitly depending on scene.
+     */
+    function objectSetup() {
+        let groundGeometry = new THREE.PlaneGeometry(100, 100);
+        let wallGeometry = new THREE.BoxGeometry(30, 20, 30);
+        let roofGeometry = new THREE.ConeGeometry(15, 10, 4);
+        let entranceGeometry = new THREE.BoxGeometry(20, 2, 10);
+        let pillarGeometry = new THREE.CylinderGeometry(1, 0.5, 22.5, 64);
+
+        createMesh(groundGeometry, GROUND_MATERIAL_PROP);
+        let wallMesh = createMesh(wallGeometry, materialPropertiesCreator(0xD9E461));
+        let roofMesh = createMesh(roofGeometry, materialPropertiesCreator(0xFF0000));
+        let entranceMesh = createMesh(entranceGeometry, materialPropertiesCreator(0xDCE61C));
+        let leftPillarMesh = createMesh(pillarGeometry, materialPropertiesCreator(COLOR_WHITE));
+        let rightPillarMesh = createMesh(pillarGeometry, materialPropertiesCreator(COLOR_WHITE));
+
+
+        wallMesh.position.y += 15;
+
+        roofMesh.position.y += (wallMesh.position.y + 20);
+        roofMesh.rotateX(THREE.MathUtils.degToRad(90));
+
+        entranceMesh.position.y += ((wallMesh.position.y) * 1.5);
+        entranceMesh.position.z += 15;
+        entranceMesh.rotateX(THREE.MathUtils.degToRad(90));
+
+        rightPillarMesh.rotateX(THREE.MathUtils.degToRad(90));
+        rightPillarMesh.position.y += 10;
+        rightPillarMesh.position.z += 16;
+        rightPillarMesh.position.x += 8;
+
+        leftPillarMesh.rotateX(THREE.MathUtils.degToRad(90));
+        leftPillarMesh.position.y += 10;
+        leftPillarMesh.position.z += 16;
+        leftPillarMesh.position.x -= 8;
+    }
+
+    function sceneSetup() {
+        scene = new THREE.Scene();
+    }
+
+    function materialPropertiesCreator(_color, _wireframe = false, _side = THREE.DoubleSide) {
+        return {
+            color: _color,
+            wireframe: _wireframe,
+            side: _side
+        }
+    }
+
+    // noinspection JSUnusedLocalSymbols
+    function renderingSetup(clearColor = COLOR_BLACK) {
+        renderer = new THREE.WebGLRenderer({antialias: true});
+        renderer.setSize(WIDTH, HEIGHT);
+        renderer.setClearColor(COLOR_BLACK);
+        document.body.appendChild(renderer.domElement);
+    }
+
+    function windowSetup() {
+        HEIGHT = window.innerHeight;
+        WIDTH = window.innerWidth;
+        aspectRatio = getAspectRatio();
+    }
+
+    function adjustAndAddMeshToScene(mesh) {
+        mesh.rotateX(-1.0 * THREE.MathUtils.degToRad(90));
+        scene.add(mesh);
+    }
+
+    function adjustAndAddAllMeshesToScene() {
+        meshContainer.forEach(mesh => adjustAndAddMeshToScene(mesh));
+    }
+
+    function cameraSetup(cameraType = THREE.PerspectiveCamera, fov = 75, near = 0.1, far = 1000,
+                         xPos = INITIAL_CAMERA_POS.x, yPos = INITIAL_CAMERA_POS.y, zPos = INITIAL_CAMERA_POS.z) {
+        camera = new cameraType(fov, aspectRatio, near, far)
+        camera.position.set(xPos, yPos, zPos);
+        camera.lookAt(scene.position);
+    }
+
+    function createMesh(geometry, materialProp, materialType = THREE.MeshPhongMaterial) {
+        let generatedMesh = new THREE.Mesh(geometry, new materialType(materialProp));
+        meshContainer.push(generatedMesh);
+        return generatedMesh;
+    }
+
+    function handleWindowResize() {
+        WIDTH = window.innerWidth;
+        HEIGHT = window.innerHeight;
+        renderer.setSize(WIDTH, HEIGHT);
+        aspectRatio = getAspectRatio();
+        camera.aspect = aspectRatio;
+        camera.updateProjectionMatrix();
+
+        console.log("New dimensions are: " + WIDTH + "x" + HEIGHT);
+        console.log("New aspect ratio is: " + aspectRatio);
+        render();
+    }
+
+    function cameraControlSetup(rotationSpeed = 2.5, panningSpeed = 0.5) {
+        controls = new TrackballControls(camera, renderer.domElement);
+        controls.rotateSpeed = rotationSpeed;
+        controls.panSpeed = panningSpeed;
+    }
+
+    function getAspectRatio() {
+        return WIDTH / HEIGHT;
+    }
+
+    function animate() {
+        requestAnimationFrame(animate);
+        controls.update();
+        render();
+    }
+
+    function render() {
+        renderer.render(scene, camera);
+    }
+
+</script>
 </body>
 </html>
