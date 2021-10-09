@@ -13,7 +13,10 @@
     let renderer;
     let scene, camera;
     let controls;
-    let meshContainer = [];
+    let meshContainer = [], lightContainer = [];
+
+    const GLOBAL_SHADOWS_ENABLED = true;
+    const OPTIMAL_SHADOW_MAP_RESOLUTION = 2048;
 
     const COLOR_BLACK = 0x000000;
     // noinspection JSUnusedGlobalSymbols
@@ -47,16 +50,12 @@
         cameraSetup();
 
         objectSetup();
+        lightSetup();
 
         adjustAndAddAllMeshesToScene();
+        addAllLightsToScene();
         window.addEventListener('resize', handleWindowResize, false);
         cameraControlSetup();
-    }
-
-    function lightSetup() {
-        // noinspection JSUnusedLocalSymbols
-        let ambientLight = new THREE.AmbientLight(COLOR_WHITE, 0.7);
-        // TODO: finish light and add to scene
     }
 
     /***
@@ -97,16 +96,29 @@
         leftPillarMesh.position.x -= 8;
     }
 
+    function lightSetup() {
+        // noinspection JSUnusedLocalSymbol
+        lightContainer.push(new THREE.AmbientLight(COLOR_WHITE, 0.7));
+        let pointLight = new THREE.PointLight(COLOR_WHITE, 1);
+        pointLight.position.set(40, 40, 40);
+        pointLight.decay = 2;
+        pointLight.distance = 0;
+        pointLight.shadow.mapSize.width = OPTIMAL_SHADOW_MAP_RESOLUTION;
+        pointLight.shadow.mapSize.height = OPTIMAL_SHADOW_MAP_RESOLUTION;
+        lightContainer.push(pointLight);
+        // TODO: finish light and add to scene
+    }
+
     function sceneSetup() {
         scene = new THREE.Scene();
     }
 
-    function materialPropertiesCreator(_color, _wireframe = false, _side = THREE.DoubleSide) {
+    function materialPropertiesCreator(_color, _wireframe = true, _side = THREE.DoubleSide) {
         return {
             color: _color,
             wireframe: _wireframe,
             side: _side
-        }
+        };
     }
 
     // noinspection JSUnusedLocalSymbols
@@ -123,13 +135,17 @@
         aspectRatio = getAspectRatio();
     }
 
-    function adjustAndAddMeshToScene(mesh) {
-        mesh.rotateX(-1.0 * THREE.MathUtils.degToRad(90));
-        scene.add(mesh);
+    function adjustAndAddAllMeshesToScene() {
+        meshContainer.forEach(mesh => {
+            mesh.rotateX(-1.0 * THREE.MathUtils.degToRad(90));
+            scene.add(mesh);
+        });
     }
 
-    function adjustAndAddAllMeshesToScene() {
-        meshContainer.forEach(mesh => adjustAndAddMeshToScene(mesh));
+    function addAllLightsToScene() {
+        lightContainer.forEach(lightSource => {
+            scene.add(lightSource);
+        });
     }
 
     function cameraSetup(cameraType = THREE.PerspectiveCamera, fov = 75, near = 0.1, far = 1000,
@@ -139,8 +155,14 @@
         camera.lookAt(scene.position);
     }
 
-    function createMesh(geometry, materialProp, materialType = THREE.MeshPhongMaterial) {
-        let generatedMesh = new THREE.Mesh(geometry, new materialType(materialProp));
+    function createMesh(geometry, materialProp) {
+        // The material type should be able to be selected based on a parameter.
+        let generatedMesh = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial(materialProp));
+        /*  This shadow settings is only effective on an example like this. Consider making this changeable for
+            complex scenes. Conditional branching is not a good idea for complex (sub)scenes imo.
+         */
+        generatedMesh.castShadow = GLOBAL_SHADOWS_ENABLED;
+        generatedMesh.receiveShadow = GLOBAL_SHADOWS_ENABLED;
         meshContainer.push(generatedMesh);
         return generatedMesh;
     }
@@ -158,7 +180,7 @@
         render();
     }
 
-    function cameraControlSetup(rotationSpeed = 2.5, panningSpeed = 0.5) {
+    function cameraControlSetup(rotationSpeed = 4, panningSpeed = 0.5) {
         controls = new TrackballControls(camera, renderer.domElement);
         controls.rotateSpeed = rotationSpeed;
         controls.panSpeed = panningSpeed;
@@ -171,10 +193,12 @@
     function animate() {
         requestAnimationFrame(animate);
         controls.update();
-        render();
+        // Passing the global value at this point is not best practice but works in a small example like this.
+        render(GLOBAL_SHADOWS_ENABLED);
     }
 
-    function render() {
+    function render(enableShadowMap = false) {
+        if (enableShadowMap) renderer.shadowMap.enabled = enableShadowMap;
         renderer.render(scene, camera);
     }
 
