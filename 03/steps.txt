@@ -1,0 +1,10 @@
+1. Create cylinder.
+2. Shrink the cylinder around all dimensions.
+3. Shrink the cylinder in Z dimension.
+4. Add a cone.
+5. Shrink the cone in all dimensions.
+6. Choose every 2. edge of the cone.
+7. Slightly move them in all (mostly XY) dimensions to create unequality.
+7. Randomly slect some faces of the cylinder.
+8. Move them all slightly in all (mostly XY) dimensions to create unequality.
+And we have low poly pinewood.
