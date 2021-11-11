@@ -2,9 +2,55 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Animation and texturing</title>
 </head>
 <body>
+<script type="module">
 
+    let WIDTH, HEIGHT, aspectRatio;
+    let renderer;
+    let scene, camera;
+    let controls;
+
+    //Meshes
+    let wallMesh, roofMesh, entranceMesh, leftPillarMesh, righPillarMesh, extraObjectMesh;
+
+    const GROUND_MATERIAL_PROP = {
+        color: COLOR_GREEN,
+        wireframe: false,
+        side: THREE.DoubleSide
+    }
+    const INITIAL_CAMERA_POS = {
+        x: 100,
+        y: 100,
+        z: 100
+    }
+
+    show();
+
+    function show() {
+        init();
+        animate();
+    }
+
+    // Meshing related functions
+    function createMesh(geometry, materialProp, castShadows = false, receiveShadow = false) {
+        // The material type should be able to be selected based on a parameter.
+        let generatedMesh = new THREE.Mesh(geometry, new THREE.MeshPhongMaterial(materialProp));
+        /*  This shadow settings is only effective on an example like this. Consider making this changeable for
+            complex scenes. Conditional branching is not a good idea for complex (sub)scenes imo.
+         */
+        generatedMesh.castShadow = castShadows;
+        generatedMesh.receiveShadow = receiveShadow;
+        return generatedMesh;
+    }
+
+    // Browser window related functions
+    function windowSetup() {
+        HEIGHT = window.innerHeight;
+        WIDTH = window.innerWidth;
+        aspectRatio = getAspectRatio();
+    }
+</script>
 </body>
 </html>
