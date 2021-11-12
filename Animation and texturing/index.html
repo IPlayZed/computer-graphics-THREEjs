@@ -7,42 +7,78 @@
 <body>
 <script type="module">
 
+    // Windowing
     let WIDTH, HEIGHT, aspectRatio;
+
+    // Rendering general
     let renderer;
     let scene, camera;
     let controls;
 
-    //Meshes
-    let wallMesh, roofMesh, entranceMesh, leftPillarMesh, righPillarMesh, extraObjectMesh;
+    // Meshes used in scenes, they are predefined
+    let groundMesh, wallMesh, roofMesh, entranceMesh, leftPillarMesh, rightPillarMesh, extraObjectMesh;
 
-    const GROUND_MATERIAL_PROP = {
-        color: COLOR_GREEN,
-        wireframe: false,
-        side: THREE.DoubleSide
-    }
+    // Material constants
+    const GROUND_MATERIAL = materialPropertiesCreator(0x00FF00);
+    const WALL_MATERIAL = materialPropertiesCreator(0xD9E461);
+    const ROOF_MATERIAL = materialPropertiesCreator(0xFF0000);
+    const ENTRANCE_MATERIAL = materialPropertiesCreator(0xDCE61C);
+    const PILLAR_MATERIAL = materialPropertiesCreator(0xFFFFFF);
+    const EXTRA_OBJECT_MATERIAL = materialPropertiesCreator(0xFF0000);
+
+    // Shadowing constants
+    const ENABLE_SHADOW = true;
+    const DISABLE_SHADOW = false;
+
+    // Camera constants
     const INITIAL_CAMERA_POS = {
         x: 100,
         y: 100,
         z: 100
     }
 
-    show();
+    // Initialize scene and start animation
+    init();
+    animate();
 
-    function show() {
-        init();
-        animate();
+    // Initialize objects
+    function objectSetup() {
+        let groundGeometry = new THREE.PlaneGeometry(10000, 10000);
+        let wallGeometry = new THREE.BoxGeometry(30, 20, 30);
+        let roofGeometry = new THREE.ConeGeometry(15, 10, 4);
+        let entranceGeometry = new THREE.BoxGeometry(20, 2, 10);
+        let pillarGeometry = new THREE.CylinderGeometry(1, 0.5, 22.5, 64);
+        let extraGeometry = new THREE.BoxGeometry(15, 15, 30);
+
+        groundMesh = createMesh(groundGeometry, GROUND_MATERIAL, DISABLE_SHADOW, ENABLE_SHADOW);
+        wallMesh = createMesh(wallGeometry, WALL_MATERIAL, ENABLE_SHADOW, ENABLE_SHADOW);
+        roofMesh = createMesh(roofGeometry, ROOF_MATERIAL, ENABLE_SHADOW, ENABLE_SHADOW);
+        entranceMesh = createMesh(entranceGeometry, ENTRANCE_MATERIAL, ENABLE_SHADOW, ENTRANCE_MATERIAL);
+        leftPillarMesh = createMesh(pillarGeometry, PILLAR_MATERIAL, ENABLE_SHADOW, ENABLE_SHADOW);
+        rightPillarMesh = createMesh(pillarGeometry, PILLAR_MATERIAL, ENABLE_SHADOW, ENABLE_SHADOW);
+        extraGeometry = createMesh(extraGeometry, EXTRA_OBJECT_MATERIAL, ENABLE_SHADOW, ENABLE_SHADOW);
+
     }
 
     // Meshing related functions
     function createMesh(geometry, materialProp, castShadows = false, receiveShadow = false) {
-        // The material type should be able to be selected based on a parameter.
         let generatedMesh = new THREE.Mesh(geometry, new THREE.MeshPhongMaterial(materialProp));
-        /*  This shadow settings is only effective on an example like this. Consider making this changeable for
-            complex scenes. Conditional branching is not a good idea for complex (sub)scenes imo.
-         */
         generatedMesh.castShadow = castShadows;
         generatedMesh.receiveShadow = receiveShadow;
         return generatedMesh;
+    }
+
+    // Material related functions
+
+    function materialPropertiesCreator(_color, _wireframe = false, _side = THREE.FrontSide, _shininess = 60,
+                                       _specular = COLOR_WHITE) {
+        return {
+            color: _color,
+            shininess: _shininess,
+            specular: _specular,
+            wireframe: _wireframe,
+            side: _side
+        };
     }
 
     // Browser window related functions
