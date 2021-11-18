@@ -30,7 +30,7 @@
     const NO_EVENT_LISTENER_OPT = false;
 
     // Material constants
-    const GROUND_MATERIAL = materialPropertiesCreator(0x00FF00);
+    const GROUND_MATERIAL = materialPropertiesCreator(0x00FF00, false, THREE.FrontSide, 4);
     const WALL_MATERIAL = materialPropertiesCreator(0xD9E461);
     const ROOF_MATERIAL = materialPropertiesCreator(0xFF0000);
     const ENTRANCE_MATERIAL = materialPropertiesCreator(0xDCE61C);
@@ -139,12 +139,12 @@
 
     // Ligthing related functions
     function lightSetup() {
-        ambientLight = new THREE.AmbientLight(0xFCE228, 0.2);
-        pointLight = new THREE.PointLight(0xFFFFFF, 0.8);
-        //spotLight = new THREE.SpotLight(0xFFFFFF, 1)
+        ambientLight = new THREE.AmbientLight(0xFCE228, 0.15);
+        pointLight = new THREE.PointLight(0xFFFFFF, 0.6);
+        spotLight = new THREE.SpotLight(0xFFFFFF, 1)
 
         pointLight.position.set(50, 50, 70);
-        pointLight.decay = 2.5;
+        pointLight.decay = 2;
 
         pointLight.castShadow = ENABLE_SHADOW;
         pointLight.shadow.mapSize.width = OPTIMAL_SHADOW_MAP_RESOLUTION;
@@ -156,13 +156,13 @@
         spotLight.penumbra = 0.9
         spotLight.target = entranceMesh;
         spotLight.castShadow = ENABLE_SHADOW;
-        spotLight.distance = 150;
+        spotLight.distance = 600;
         spotLight.shadow.mapSize.width = OPTIMAL_SHADOW_MAP_RESOLUTION;
         spotLight.shadow.mapSize.height = OPTIMAL_SHADOW_MAP_RESOLUTION;
 
         scene.add(ambientLight);
         scene.add(pointLight);
-        pointLight.add(spotLight);
+        scene.add(spotLight);
     }
 
     // Meshing related functions
