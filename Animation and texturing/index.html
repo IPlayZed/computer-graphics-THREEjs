@@ -26,9 +26,6 @@
 
     const OPTIMAL_SHADOW_MAP_RESOLUTION = 2048;
 
-    const RENDER_EVENT_LISTENER = 'render';
-    const NO_EVENT_LISTENER_OPT = false;
-
     // Material constants
     const GROUND_MATERIAL = materialPropertiesCreator(0x00FF00, false, THREE.FrontSide, 4);
     const WALL_MATERIAL = materialPropertiesCreator(0xD9E461);
@@ -64,7 +61,7 @@
         lightSetup();
 
         // FIXME: Find out why is handleWindowResize not called
-        window.addEventListener(RENDER_EVENT_LISTENER, handleWindowResize, !NO_EVENT_LISTENER_OPT);
+        window.addEventListener('render', handleWindowResize, false);
         cameraControlSetup();
     }
 
