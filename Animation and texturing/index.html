@@ -7,6 +7,9 @@
 <body>
 <script type="module">
 
+    import * as THREE from "../js-r132/build/three.module.js";
+    import {TrackballControls} from "../js-r132/examples/jsm/controls/TrackballControls.js";
+
     // Windowing
     let WIDTH, HEIGHT, aspectRatio;
 
@@ -17,6 +20,12 @@
 
     // Meshes used in scenes, they are predefined
     let groundMesh, wallMesh, roofMesh, entranceMesh, leftPillarMesh, rightPillarMesh, extraObjectMesh;
+
+    // Lights used in scenes, they are predefined
+    let ambientLight, pointLight, spotLight;
+
+    const RENDER_EVENT_LISTENER = 'render';
+    const NO_EVENT_LISTENER_OPT = false;
 
     // Material constants
     const GROUND_MATERIAL = materialPropertiesCreator(0x00FF00);
@@ -36,12 +45,33 @@
         y: 100,
         z: 100
     }
+    const CAMERA_ROTATION_SPEED = 4;
+    const CAMERA_PANNING_SPEED = 0.5;
 
     // Initialize scene and start animation
     init();
     animate();
 
-    // Initialize objects
+    function init() {
+        windowSetup();
+        renderingSetup();
+        scene = new THREE.Scene();
+        cameraSetup();
+
+        objectSetup();
+        lightSetup();
+
+        window.addEventListener(RENDER_EVENT_LISTENER, handleWindowResize, NO_EVENT_LISTENER_OPT);
+        cameraControlSetup();
+    }
+
+    function animate() {
+        requestAnimationFrame(animate);
+        controls.update();
+        render(ENABLE_SHADOW);
+    }
+
+    // Object related functions
     function objectSetup() {
         let groundGeometry = new THREE.PlaneGeometry(10000, 10000);
         let wallGeometry = new THREE.BoxGeometry(30, 20, 30);
@@ -56,7 +86,50 @@
         entranceMesh = createMesh(entranceGeometry, ENTRANCE_MATERIAL, ENABLE_SHADOW, ENTRANCE_MATERIAL);
         leftPillarMesh = createMesh(pillarGeometry, PILLAR_MATERIAL, ENABLE_SHADOW, ENABLE_SHADOW);
         rightPillarMesh = createMesh(pillarGeometry, PILLAR_MATERIAL, ENABLE_SHADOW, ENABLE_SHADOW);
-        extraGeometry = createMesh(extraGeometry, EXTRA_OBJECT_MATERIAL, ENABLE_SHADOW, ENABLE_SHADOW);
+        extraObjectMesh = createMesh(extraGeometry, EXTRA_OBJECT_MATERIAL, ENABLE_SHADOW, ENABLE_SHADOW);
+
+        positionObjects();
+
+        let rotateMesh = (mesh) => mesh.rotateX(-1.0 * THREE.MathUtils.degToRad(90));
+
+        rotateMesh(groundMesh);
+        rotateMesh(wallMesh);
+        rotateMesh(roofMesh);
+        rotateMesh(entranceMesh);
+        rotateMesh(leftPillarMesh);
+        rotateMesh(rightPillarMesh);
+        rotateMesh(extraObjectMesh);
+
+        scene.add(groundMesh);
+    }
+
+    function positionObjects() {
+        wallMesh.position.y += 15;
+
+        extraObjectMesh.position.y += 7.5;
+        extraObjectMesh.position.x += 20;
+        extraObjectMesh.position.z += 40;
+
+        roofMesh.position.y += (wallMesh.position.y + 20);
+        roofMesh.rotateX(THREE.MathUtils.degToRad(90));
+
+        entranceMesh.position.y += ((wallMesh.position.y) * 1.5);
+        entranceMesh.position.z += 15;
+        entranceMesh.rotateX(THREE.MathUtils.degToRad(90));
+
+        rightPillarMesh.rotateX(THREE.MathUtils.degToRad(90));
+        rightPillarMesh.position.y += 10;
+        rightPillarMesh.position.z += 16;
+        rightPillarMesh.position.x += 8;
+
+        leftPillarMesh.rotateX(THREE.MathUtils.degToRad(90));
+        leftPillarMesh.position.y += 10;
+        leftPillarMesh.position.z += 16;
+        leftPillarMesh.position.x -= 8;
+    }
+
+    // Ligthing related functions
+    function lightSetup() {
 
     }
 
@@ -69,9 +142,8 @@
     }
 
     // Material related functions
-
     function materialPropertiesCreator(_color, _wireframe = false, _side = THREE.FrontSide, _shininess = 60,
-                                       _specular = COLOR_WHITE) {
+                                       _specular = 0xffffff) {
         return {
             color: _color,
             shininess: _shininess,
@@ -85,8 +157,49 @@
     function windowSetup() {
         HEIGHT = window.innerHeight;
         WIDTH = window.innerWidth;
-        aspectRatio = getAspectRatio();
+        aspectRatio = WIDTH / HEIGHT;
     }
+
+    function handleWindowResize() {
+        WIDTH = window.innerWidth;
+        HEIGHT = window.innerHeight;
+        renderer.setSize(WIDTH, HEIGHT);
+        aspectRatio = WIDTH / HEIGHT;
+        camera.aspect = aspectRatio;
+        camera.updateProjectionMatrix();
+
+        console.log("New dimensions are: " + WIDTH + "x" + HEIGHT);
+        console.log("New aspect ratio is: " + aspectRatio);
+        render();
+    }
+
+    // Rendering related setup
+    function renderingSetup() {
+        renderer = new THREE.WebGLRenderer({antialias: true});
+        renderer.setSize(WIDTH, HEIGHT);
+        renderer.setClearColor(0x000000);
+        document.body.appendChild(renderer.domElement);
+    }
+
+    function render(enableShadowMap = false) {
+        if (enableShadowMap) renderer.shadowMap.enabled = enableShadowMap;
+        renderer.render(scene, camera);
+    }
+
+    // Camera related setup
+    function cameraSetup(cameraType = THREE.PerspectiveCamera, fov = 90, near = 0.1, far = 1000,
+                         xPos = INITIAL_CAMERA_POS.x, yPos = INITIAL_CAMERA_POS.y, zPos = INITIAL_CAMERA_POS.z) {
+        camera = new cameraType(fov, aspectRatio, near, far)
+        camera.position.set(xPos, yPos, zPos);
+        camera.lookAt(scene.position);
+    }
+
+    function cameraControlSetup() {
+        controls = new TrackballControls(camera, renderer.domElement);
+        controls.rotateSpeed = CAMERA_ROTATION_SPEED;
+        controls.panSpeed = CAMERA_PANNING_SPEED;
+    }
+
 </script>
 </body>
 </html>
