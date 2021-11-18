@@ -60,9 +60,8 @@
         objectSetup();
         lightSetup();
 
-        // FIXME: Find out why is handleWindowResize not called
-        window.addEventListener('render', handleWindowResize, false);
         cameraControlSetup();
+        window.addEventListener('resize', handleWindowResize, false);
     }
 
     function animate() {
@@ -190,15 +189,13 @@
     }
 
     function handleWindowResize() {
-        WIDTH = window.innerWidth;
         HEIGHT = window.innerHeight;
+        WIDTH = window.innerWidth;
         renderer.setSize(WIDTH, HEIGHT);
         aspectRatio = WIDTH / HEIGHT;
         camera.aspect = aspectRatio;
         camera.updateProjectionMatrix();
 
-        console.log("New dimensions are: " + WIDTH + "x" + HEIGHT);
-        console.log("New aspect ratio is: " + aspectRatio);
         render();
     }
 
