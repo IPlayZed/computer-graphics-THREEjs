@@ -26,6 +26,11 @@
 
     let exampleTexture;
 
+    let extraObject_direction_x = 1, lightContainer_direction_x = 1, scale_x = 0.1, scale_y = 0.1, scale_z = 0.1;
+    let scale, lightContainer_direction_z = 1;
+
+    let containerGeometry = new THREE.Object3D();
+
     const OPTIMAL_SHADOW_MAP_RESOLUTION = 2048;
 
     // Material constants
@@ -39,6 +44,9 @@
     // Shadowing constants
     const ENABLE_SHADOW = true;
     const DISABLE_SHADOW = false;
+
+    const LIGHT_CONTAINER_MAX_MOVE_X = 100;
+    const EXTRA_OBJECT_MAX_MOVE_X = 5;
 
     // Camera constants
     const INITIAL_CAMERA_POS = {
@@ -70,6 +78,45 @@
     function animate() {
         requestAnimationFrame(animate);
         controls.update();
+        let change = Math.tan(Math.random() * Math.random());
+        extraObjectMesh.position.x += change * extraObject_direction_x;
+
+        if (extraObjectMesh.position.x > EXTRA_OBJECT_MAX_MOVE_X) {
+            extraObjectMesh.position.x = EXTRA_OBJECT_MAX_MOVE_X - (extraObjectMesh.position.x - EXTRA_OBJECT_MAX_MOVE_X);
+            extraObject_direction_x = -1;
+        }
+
+        if (extraObjectMesh.position.x < -EXTRA_OBJECT_MAX_MOVE_X) {
+            extraObjectMesh.position.x = -EXTRA_OBJECT_MAX_MOVE_X - (extraObjectMesh.position.x + EXTRA_OBJECT_MAX_MOVE_X);
+            extraObject_direction_x = 1;
+        }
+        scale = 1.01;
+        if (scale_x > 2) {
+            scale *= 0.1;
+        }
+        extraObjectMesh.scale.set(scale_x *= scale, scale_y *= scale, scale_z *= scale);
+        extraObjectMesh.rotation.z += change;
+
+        containerGeometry.position.x += change * lightContainer_direction_x;
+        if (containerGeometry.position.x > LIGHT_CONTAINER_MAX_MOVE_X) {
+            containerGeometry.position.x = LIGHT_CONTAINER_MAX_MOVE_X - (containerGeometry.position.x - LIGHT_CONTAINER_MAX_MOVE_X);
+            lightContainer_direction_x = -1;
+        }
+        if (containerGeometry.position.x < -LIGHT_CONTAINER_MAX_MOVE_X) {
+            containerGeometry.position.x = -LIGHT_CONTAINER_MAX_MOVE_X - (containerGeometry.position.x + LIGHT_CONTAINER_MAX_MOVE_X);
+            lightContainer_direction_x = 1;
+        }
+        if (containerGeometry.position.z > 50) {
+            containerGeometry.position.z = 50 - (containerGeometry.position.z - 50);
+            lightContainer_direction_z = -1;
+        }
+        if (containerGeometry.position.z < -50) {
+            containerGeometry.position.z = -50 - (containerGeometry.position.z + 50);
+            lightContainer_direction_z = 1;
+        }
+
+        //mesh.position.x = pos_x;
+        console.log(extraObjectMesh.position.x);
         render(ENABLE_SHADOW);
     }
 
@@ -160,8 +207,9 @@
         spotLight.shadow.mapSize.height = OPTIMAL_SHADOW_MAP_RESOLUTION;
 
         scene.add(ambientLight);
-        scene.add(pointLight);
-        scene.add(spotLight);
+        containerGeometry.add(pointLight);
+        containerGeometry.add(spotLight);
+        scene.add(containerGeometry);
     }
 
     // Meshing related functions
