@@ -24,6 +24,8 @@
     // Lights used in scenes, they are predefined
     let ambientLight, pointLight, spotLight;
 
+    let exampleTexture;
+
     const OPTIMAL_SHADOW_MAP_RESOLUTION = 2048;
 
     // Material constants
@@ -52,6 +54,7 @@
     animate();
 
     function init() {
+        exampleTexture = new THREE.TextureLoader().load("texture.jpg");
         windowSetup();
         renderingSetup();
         scene = new THREE.Scene();
@@ -85,7 +88,7 @@
         entranceMesh = createMesh(entranceGeometry, ENTRANCE_MATERIAL, ENABLE_SHADOW, ENTRANCE_MATERIAL);
         leftPillarMesh = createMesh(pillarGeometry, PILLAR_MATERIAL, ENABLE_SHADOW, ENABLE_SHADOW);
         rightPillarMesh = createMesh(pillarGeometry, PILLAR_MATERIAL, ENABLE_SHADOW, ENABLE_SHADOW);
-        extraObjectMesh = createMesh(extraGeometry, EXTRA_OBJECT_MATERIAL, ENABLE_SHADOW, ENABLE_SHADOW);
+        extraObjectMesh = createMesh(extraGeometry, EXTRA_OBJECT_MATERIAL, ENABLE_SHADOW, ENABLE_SHADOW, true);
 
         positionObjects();
 
@@ -162,8 +165,13 @@
     }
 
     // Meshing related functions
-    function createMesh(geometry, materialProp, castShadows = false, receiveShadow = false) {
-        let generatedMesh = new THREE.Mesh(geometry, new THREE.MeshPhongMaterial(materialProp));
+    function createMesh(geometry, materialProp, castShadows = false, receiveShadow = false, isTextured = false,
+                        texture = exampleTexture) {
+        let material = new THREE.MeshPhongMaterial(materialProp);
+        if (isTextured) {
+            material.map = texture;
+        }
+        let generatedMesh = new THREE.Mesh(geometry, material);
         generatedMesh.castShadow = castShadows;
         generatedMesh.receiveShadow = receiveShadow;
         return generatedMesh;
@@ -227,5 +235,6 @@
     }
 
 </script>
+<a href="http://www.freepik.com">Texture license: Designed by Freepik</a>
 </body>
 </html>
