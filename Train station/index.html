@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Train station scene</title>
+</head>
+<body>
+<script type="module">
+
+    import * as THREE from "../js-r132/build/three.module.js";
+    import {TrackballControls} from "../js-r132/examples/jsm/controls/TrackballControls.js";
+
+    // Windowing
+    let WIDTH, HEIGHT, aspectRatio;
+
+    // Rendering general
+    let renderer;
+    let scene, camera;
+    let controls;
+
+    // Meshes used in scenes, they are predefined
+    let groundMesh, wallMesh, roofMesh, entranceMesh, leftPillarMesh, rightPillarMesh;
+
+    // Lights used in scenes, they are predefined
+    let ambientLight, pointLight, spotLight;
+
+    let exampleTexture;
+
+    let lightContainer_direction_x = 1, lightContainer_direction_z = 1;
+
+    let containerGeometry = new THREE.Object3D();
+
+    const OPTIMAL_SHADOW_MAP_RESOLUTION = 2048;
+
+    // Material constants
+    const GROUND_MATERIAL = materialPropertiesCreator(0x00FF00, false, THREE.FrontSide, 4);
+    const WALL_MATERIAL = materialPropertiesCreator(0xD9E461);
+    const ROOF_MATERIAL = materialPropertiesCreator(0xFF0000);
+    const ENTRANCE_MATERIAL = materialPropertiesCreator(0xDCE61C);
+    const PILLAR_MATERIAL = materialPropertiesCreator(0xFFFFFF);
+
+    // Shadowing constants
+    const ENABLE_SHADOW = true;
+    const DISABLE_SHADOW = false;
+
+    const LIGHT_CONTAINER_MAX_MOVE_X = 100;
+
+    // Camera constants
+    const INITIAL_CAMERA_POS = {
+        x: 100,
+        y: 100,
+        z: 100
+    }
+    const CAMERA_ROTATION_SPEED = 4;
+    const CAMERA_PANNING_SPEED = 0.5;
+
+    // Initialize scene and start animation
+    init();
+    animate();
+
+    function init() {
+        exampleTexture = new THREE.TextureLoader().load("texture.jpg");
+        windowSetup();
+        renderingSetup();
+        scene = new THREE.Scene();
+        cameraSetup();
+
+        objectSetup();
+        lightSetup();
+
+        cameraControlSetup();
+        window.addEventListener('resize', handleWindowResize, false);
+    }
+
+    function animate() {
+        requestAnimationFrame(animate);
+        controls.update();
+        let change = Math.tan(Math.random() * Math.random());
+
+        containerGeometry.position.x += change * lightContainer_direction_x;
+        if (containerGeometry.position.x > LIGHT_CONTAINER_MAX_MOVE_X) {
+            containerGeometry.position.x = LIGHT_CONTAINER_MAX_MOVE_X - (containerGeometry.position.x - LIGHT_CONTAINER_MAX_MOVE_X);
+            lightContainer_direction_x = -1;
+        }
+        if (containerGeometry.position.x < -LIGHT_CONTAINER_MAX_MOVE_X) {
+            containerGeometry.position.x = -LIGHT_CONTAINER_MAX_MOVE_X - (containerGeometry.position.x + LIGHT_CONTAINER_MAX_MOVE_X);
+            lightContainer_direction_x = 1;
+        }
+        if (containerGeometry.position.z > 50) {
+            containerGeometry.position.z = 50 - (containerGeometry.position.z - 50);
+            lightContainer_direction_z = -1;
+        }
+        if (containerGeometry.position.z < -50) {
+            containerGeometry.position.z = -50 - (containerGeometry.position.z + 50);
+            lightContainer_direction_z = 1;
+        }
+
+        render(ENABLE_SHADOW);
+    }
+
+    // Object related functions
+    function objectSetup() {
+        let groundGeometry = new THREE.PlaneGeometry(10000, 10000);
+        let wallGeometry = new THREE.BoxGeometry(30, 20, 30);
+        let roofGeometry = new THREE.ConeGeometry(15, 10, 4);
+        let entranceGeometry = new THREE.BoxGeometry(20, 2, 10);
+        let pillarGeometry = new THREE.CylinderGeometry(1, 0.5, 22.5, 64);
+
+        groundMesh = createMesh(groundGeometry, GROUND_MATERIAL, DISABLE_SHADOW, ENABLE_SHADOW);
+        wallMesh = createMesh(wallGeometry, WALL_MATERIAL, ENABLE_SHADOW, ENABLE_SHADOW);
+        roofMesh = createMesh(roofGeometry, ROOF_MATERIAL, ENABLE_SHADOW, ENABLE_SHADOW);
+        entranceMesh = createMesh(entranceGeometry, ENTRANCE_MATERIAL, ENABLE_SHADOW, ENTRANCE_MATERIAL);
+        leftPillarMesh = createMesh(pillarGeometry, PILLAR_MATERIAL, ENABLE_SHADOW, ENABLE_SHADOW);
+        rightPillarMesh = createMesh(pillarGeometry, PILLAR_MATERIAL, ENABLE_SHADOW, ENABLE_SHADOW);
+
+        positionObjects();
+
+        let rotateMesh = (mesh) => mesh.rotateX(-1.0 * THREE.MathUtils.degToRad(90));
+
+        rotateMesh(groundMesh);
+        rotateMesh(wallMesh);
+        rotateMesh(roofMesh);
+        rotateMesh(entranceMesh);
+        rotateMesh(leftPillarMesh);
+        rotateMesh(rightPillarMesh);
+
+        scene.add(groundMesh);
+        scene.add(wallMesh);
+        scene.add(roofMesh);
+        scene.add(entranceMesh);
+        scene.add(leftPillarMesh);
+        scene.add(rightPillarMesh);
+    }
+
+    function positionObjects() {
+        wallMesh.position.y += 15;
+
+        roofMesh.position.y += (wallMesh.position.y + 20);
+        roofMesh.rotateX(THREE.MathUtils.degToRad(90));
+
+        entranceMesh.position.y += ((wallMesh.position.y) * 1.5);
+        entranceMesh.position.z += 15;
+        entranceMesh.rotateX(THREE.MathUtils.degToRad(90));
+
+        rightPillarMesh.rotateX(THREE.MathUtils.degToRad(90));
+        rightPillarMesh.position.y += 10;
+        rightPillarMesh.position.z += 16;
+        rightPillarMesh.position.x += 8;
+
+        leftPillarMesh.rotateX(THREE.MathUtils.degToRad(90));
+        leftPillarMesh.position.y += 10;
+        leftPillarMesh.position.z += 16;
+        leftPillarMesh.position.x -= 8;
+    }
+
+    // Ligthing related functions
+    function lightSetup() {
+        ambientLight = new THREE.AmbientLight(0xFCE228, 0.15);
+        pointLight = new THREE.PointLight(0xFFFFFF, 0.6);
+        spotLight = new THREE.SpotLight(0xFFFFFF, 1)
+
+        pointLight.position.set(50, 50, 70);
+        pointLight.decay = 2;
+
+        pointLight.castShadow = ENABLE_SHADOW;
+        pointLight.shadow.mapSize.width = OPTIMAL_SHADOW_MAP_RESOLUTION;
+        pointLight.shadow.mapSize.height = OPTIMAL_SHADOW_MAP_RESOLUTION;
+
+        spotLight = new THREE.SpotLight(0xFFFFFF, 1)
+        spotLight.position.set(30, 50, 60);
+        spotLight.angle = Math.PI / 6;
+        spotLight.penumbra = 0.9
+        spotLight.target = entranceMesh;
+        spotLight.castShadow = ENABLE_SHADOW;
+        spotLight.distance = 600;
+        spotLight.shadow.mapSize.width = OPTIMAL_SHADOW_MAP_RESOLUTION;
+        spotLight.shadow.mapSize.height = OPTIMAL_SHADOW_MAP_RESOLUTION;
+
+        scene.add(ambientLight);
+        containerGeometry.add(pointLight);
+        containerGeometry.add(spotLight);
+        scene.add(containerGeometry);
+    }
+
+    // Meshing related functions
+    function createMesh(geometry, materialProp, castShadows = false, receiveShadow = false, isTextured = false,
+                        texture = exampleTexture) {
+        let material = new THREE.MeshPhongMaterial(materialProp);
+        if (isTextured) {
+            material.map = texture;
+        }
+        let generatedMesh = new THREE.Mesh(geometry, material);
+        generatedMesh.castShadow = castShadows;
+        generatedMesh.receiveShadow = receiveShadow;
+        return generatedMesh;
+    }
+
+    // Material related functions
+    function materialPropertiesCreator(_color, _wireframe = false, _side = THREE.FrontSide, _shininess = 60,
+                                       _specular = 0xffffff) {
+        return {
+            color: _color,
+            shininess: _shininess,
+            specular: _specular,
+            wireframe: _wireframe,
+            side: _side
+        };
+    }
+
+    // Browser window related functions
+    function windowSetup() {
+        HEIGHT = window.innerHeight;
+        WIDTH = window.innerWidth;
+        aspectRatio = WIDTH / HEIGHT;
+    }
+
+    function handleWindowResize() {
+        HEIGHT = window.innerHeight;
+        WIDTH = window.innerWidth;
+        renderer.setSize(WIDTH, HEIGHT);
+        aspectRatio = WIDTH / HEIGHT;
+        camera.aspect = aspectRatio;
+        camera.updateProjectionMatrix();
+
+        render();
+    }
+
+    // Rendering related setup
+    function renderingSetup() {
+        renderer = new THREE.WebGLRenderer({antialias: true});
+        renderer.setSize(WIDTH, HEIGHT);
+        renderer.setClearColor(0x000000);
+        document.body.appendChild(renderer.domElement);
+    }
+
+    function render(enableShadowMap = false) {
+        if (enableShadowMap) renderer.shadowMap.enabled = enableShadowMap;
+        renderer.render(scene, camera);
+    }
+
+    // Camera related setup
+    function cameraSetup(cameraType = THREE.PerspectiveCamera, fov = 90, near = 0.1, far = 1000,
+                         xPos = INITIAL_CAMERA_POS.x, yPos = INITIAL_CAMERA_POS.y, zPos = INITIAL_CAMERA_POS.z) {
+        camera = new cameraType(fov, aspectRatio, near, far)
+        camera.position.set(xPos, yPos, zPos);
+        camera.lookAt(scene.position);
+    }
+
+    function cameraControlSetup() {
+        controls = new TrackballControls(camera, renderer.domElement);
+        controls.rotateSpeed = CAMERA_ROTATION_SPEED;
+        controls.panSpeed = CAMERA_PANNING_SPEED;
+    }
+
+</script>
+<a href="http://www.freepik.com">Texture license: Designed by Freepik</a>
+</body>
+</html>
