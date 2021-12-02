@@ -31,7 +31,7 @@
     let lightContainer_direction_x = 1, lightContainer_direction_z = 1;
 
     let textureLoader = new THREE.TextureLoader();
-    let groundTexture;
+    let groundTexture, wallTexture;
 
     let containerGeometry = new THREE.Object3D();
 
@@ -39,7 +39,7 @@
 
     // Material constants
     const GROUND_MATERIAL = materialPropertiesCreator(0xFFFFFF, false, THREE.FrontSide, 4);
-    const WALL_MATERIAL = materialPropertiesCreator(0xD9E461);
+    const WALL_MATERIAL = materialPropertiesCreator(0xFFFFFF);
     const ROOF_MATERIAL = materialPropertiesCreator(0xFF0000);
     const ENTRANCE_MATERIAL = materialPropertiesCreator(0xDCE61C);
     const PILLAR_MATERIAL = materialPropertiesCreator(0xFFFFFF);
@@ -61,6 +61,7 @@
 
     // Initialize scene and start animation
     groundTexture = textureLoader.load("top.png");
+    wallTexture = textureLoader.load("wall.jpg");
     blenderLoader();
 
     // Initialize objects.
@@ -104,40 +105,10 @@
         render(ENABLE_SHADOW);
     }
 
-    // Loads blender object.
-    /*
-    // FIXME: why the f does this throw undefined property "scale" for child???
+    // Loads blender object and if successful initializes the scene and starts the animation.
     function blenderLoader() {
-        let OBJ = "sphere_uv_flat.obj";
-        let MTL = "sphere_uv_flat.mtl";
-
-        let childFun = child => {
-            if(child instanceof THREE.Mesh) {
-                child.set.scale(5, 5, 5);
-                console.log("Child material: " + child.material);
-            }
-        }
-
-        let objFun = obj => {
-            meshLoaded = obj;
-            console.log("Object loaded: " + obj);
-            obj.traverse(childFun);
-
-            init();
-            animate();
-        }
-
-        let matsFun = mats => {
-            mats.preload();
-            new OBJLoader().setMaterials(mats).load(OBJ, objFun);
-        }
-
-        new MTLLoader().load(MTL, matsFun)
-    }
-    */
-    function blenderLoader() {
-        var OBJFile = 'train.obj';
-        var MTLFile = 'train.mtl';
+        let OBJFile = 'train.obj';
+        let MTLFile = 'train.mtl';
 
         new MTLLoader()
             .load(MTLFile, function (materials) {
@@ -172,18 +143,19 @@
         let entranceGeometry = new THREE.BoxGeometry(20, 2, 10);
         let pillarGeometry = new THREE.CylinderGeometry(1, 0.5, 22.5, 64);
 
-        groundTexture.wrapS = THREE.RepeatWrapping;
-        groundTexture.wrapT = THREE.RepeatWrapping;
-        groundTexture.repeat.set(100, 100);
+        let repeatTexture = (texture, times) => {
+            texture.wrapS = THREE.RepeatWrapping;
+            texture.wrapT = THREE.RepeatWrapping;
+            texture.repeat.set(times, times);
+        }
+
+        repeatTexture(groundTexture, 100);
         groundMesh = createMesh(groundGeometry, GROUND_MATERIAL, DISABLE_SHADOW, ENABLE_SHADOW, true);
-        wallMesh = createMesh(wallGeometry, WALL_MATERIAL, ENABLE_SHADOW, ENABLE_SHADOW);
+        wallMesh = createMesh(wallGeometry, WALL_MATERIAL, ENABLE_SHADOW, ENABLE_SHADOW, true, wallTexture);
         roofMesh = createMesh(roofGeometry, ROOF_MATERIAL, ENABLE_SHADOW, ENABLE_SHADOW);
         entranceMesh = createMesh(entranceGeometry, ENTRANCE_MATERIAL, ENABLE_SHADOW, ENTRANCE_MATERIAL);
         leftPillarMesh = createMesh(pillarGeometry, PILLAR_MATERIAL, ENABLE_SHADOW, ENABLE_SHADOW);
         rightPillarMesh = createMesh(pillarGeometry, PILLAR_MATERIAL, ENABLE_SHADOW, ENABLE_SHADOW);
-
-        //meshLoaded.receiveShadow = ENABLE_SHADOW;
-        //meshLoaded.castShadow = ENABLE_SHADOW;
 
         positionObjects();
 
