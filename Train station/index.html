@@ -24,7 +24,7 @@
     // Meshes used in scenes, they are predefined
     let groundMesh, wallMesh, roofMesh, entranceMesh, leftPillarMesh, rightPillarMesh;
 
-    let meshLoadedTrain;
+    let meshLoadedTrain, meshLoadedPinewood;
 
     // Lights used in scenes, they are predefined
     let ambientLight, pointLight, spotLight;
@@ -155,19 +155,47 @@
 
     // Loads blender object and if successful initializes the scene and starts the animation.
     function blenderLoader() {
-        let OBJFile = 'train.obj';
-        let MTLFile = 'train.mtl';
+        let OBJFileTrain = 'train.obj';
+        let MTLFileTrain = 'train.mtl';
+
+        let chainedLoader = () => {
+            let OBJFilePinewood = 'pinewood.obj';
+            let MTLFilePinewood = 'pinewood.obj';
+
+            new MTLLoader()
+                .load(MTLFilePinewood, materials => {
+                    materials.preload();
+                    new OBJLoader()
+                        .setMaterials(materials)
+                        .load(OBJFilePinewood, object => {
+                            meshLoadedPinewood = object;
+                            console.log(object);
+
+                            object.traverse(child => {
+                                if (child instanceof THREE.Mesh) {
+                                    child.scale.set(3, 3, 3);
+                                    child.material.side = THREE.FrontSide;
+                                    child.castShadow = ENABLE_SHADOW;
+                                    child.receiveShadow = ENABLE_SHADOW;
+                                    console.log(child.material);
+                                }
+                            });
+                            init();
+                            animate();
+                        });
+                });
+        }
 
         new MTLLoader()
-            .load(MTLFile, function (materials) {
+            .load(MTLFileTrain, materials => {
                 materials.preload();
                 new OBJLoader()
                     .setMaterials(materials)
-                    .load(OBJFile, function (object) {
+                    .load(OBJFileTrain, object => {
                         meshLoadedTrain = object;
                         console.log(object);
 
-                        object.traverse(function (child) {
+                        object.traverse(child => {
                             if (child instanceof THREE.Mesh) {
                                 child.scale.set(3, 3, 3);
                                 child.material.side = THREE.FrontSide;
@@ -176,11 +204,12 @@
                                 console.log(child.material);
                             }
                         });
-
-                        init();
-                        animate();
+                        chainedLoader();
                     });
             });
+    }
+
+    function blenderLoaderTree() {
     }
 
     // Object related functions
@@ -223,6 +252,7 @@
         scene.add(leftPillarMesh);
         scene.add(rightPillarMesh);
         scene.add(meshLoadedTrain);
+        scene.add(meshLoadedPinewood);
     }
 
     function positionObjects() {
