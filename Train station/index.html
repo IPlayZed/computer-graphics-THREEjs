@@ -27,6 +27,7 @@
 
     // Lights used in scenes, they are predefined
     let ambientLight, pointLight, spotLight;
+    const AMBIENT_LIGHT_INTENSITY = 0.3, SPOT_LIGHT_INTENSITY = 0.6, LIGHT_OFF = 0;
 
     let lightContainer_direction_x = 1, lightContainer_direction_z = 1;
 
@@ -59,6 +60,8 @@
     const CAMERA_ROTATION_SPEED = 4;
     const CAMERA_PANNING_SPEED = 0.5;
 
+    let isDataHidden = false, isDayTime = true, isSpotLightOn = true;
+
     // Initialize scene and start animation
     groundTexture = textureLoader.load("ground.jpg");
     wallTexture = textureLoader.load("wall.jpg");
@@ -76,6 +79,40 @@
 
         cameraControlSetup();
         window.addEventListener('resize', handleWindowResize, false);
+        document.addEventListener('keydown', event => {
+            switch (event.key) {
+                case 'I':
+                case 'i': {
+                    document.getElementById("data").hidden = !isDataHidden;
+                    isDataHidden = !isDataHidden;
+                    break;
+                }
+                case 'N':
+                case 'n': {
+                    if (isDayTime) ambientLight.intensity = LIGHT_OFF;
+                    else ambientLight.intensity = AMBIENT_LIGHT_INTENSITY;
+                    isDayTime = !isDayTime;
+                    break;
+                }
+                case 'R':
+                case 'r': {
+                    if (isSpotLightOn) spotLight.intensity = LIGHT_OFF;
+                    else spotLight.intensity = SPOT_LIGHT_INTENSITY;
+                    isSpotLightOn = !isSpotLightOn;
+                    break;
+                }
+                case 'F':
+                case 'f': {
+                    meshLoadedTrain.position.x -= 1;
+                    break;
+                }
+                case 'B':
+                case 'b': {
+                    meshLoadedTrain.position.x += 1;
+                    break;
+                }
+            }
+        });
     }
 
     // Perform animation related tasks.
@@ -204,8 +241,8 @@
 
     // Ligthing related functions
     function lightSetup() {
-        ambientLight = new THREE.AmbientLight(0xFCE228, 0.15);
-        pointLight = new THREE.PointLight(0xFFFFFF, 0.6);
+        ambientLight = new THREE.AmbientLight(0xFCE228, AMBIENT_LIGHT_INTENSITY);
+        pointLight = new THREE.PointLight(0xFFFFFF, SPOT_LIGHT_INTENSITY);
         spotLight = new THREE.SpotLight(0xFFFFFF, 1)
 
         pointLight.position.set(50, 50, 70);
@@ -303,4 +340,42 @@
 
 </script>
 </body>
+<table id="data" width="100%">
+    <!-- Temp data for course.-->
+    <tr>
+        <th>Created by</th>
+        <th width="75%">&NonBreakingSpace;</th>
+        <th>Controls</th>
+    </tr>
+    <tr>
+        <td>Name: Börcsök Balázs Róbert</td>
+        <th width="75%">&NonBreakingSpace;</th>
+        <td>I: only show scene</td>
+    </tr>
+    <tr>
+        <td>G0F6UU</td>
+        <th width="75%">&NonBreakingSpace;</th>
+        <td>N: enable/disable nighttime</td>
+    </tr>
+    <tr>
+        <td>2021/02</td>
+        <th width="75%">&NonBreakingSpace;</th>
+        <td>F: enable/disable fog</td>
+    </tr>
+    <tr>
+        <td>&NonBreakingSpace;</td>
+        <th width="75%">&NonBreakingSpace;</th>
+        <td>F: move train forward</td>
+    </tr>
+    <tr>
+        <td>&NonBreakingSpace;</td>
+        <th width="75%">&NonBreakingSpace;</th>
+        <td>B: move train backward</td>
+    </tr>
+    <tr>
+        <td>&NonBreakingSpace;</td>
+        <th width="75%">&NonBreakingSpace;</th>
+        <td>R: enable/disable point light</td>
+    </tr>
+</table>
 </html>
