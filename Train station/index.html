@@ -30,12 +30,15 @@
 
     let lightContainer_direction_x = 1, lightContainer_direction_z = 1;
 
+    let textureLoader = new THREE.TextureLoader();
+    let groundTexture;
+
     let containerGeometry = new THREE.Object3D();
 
     const OPTIMAL_SHADOW_MAP_RESOLUTION = 2048;
 
     // Material constants
-    const GROUND_MATERIAL = materialPropertiesCreator(0x00FF00, false, THREE.FrontSide, 4);
+    const GROUND_MATERIAL = materialPropertiesCreator(0xFFFFFF, false, THREE.FrontSide, 4);
     const WALL_MATERIAL = materialPropertiesCreator(0xD9E461);
     const ROOF_MATERIAL = materialPropertiesCreator(0xFF0000);
     const ENTRANCE_MATERIAL = materialPropertiesCreator(0xDCE61C);
@@ -57,6 +60,7 @@
     const CAMERA_PANNING_SPEED = 0.5;
 
     // Initialize scene and start animation
+    groundTexture = textureLoader.load("top.png");
     blenderLoader();
 
     // Initialize objects.
@@ -146,8 +150,10 @@
 
                         object.traverse(function (child) {
                             if (child instanceof THREE.Mesh) {
-                                child.scale.set(4, 4, 4);
-                                child.material.side = THREE.DoubleSide;
+                                child.scale.set(3, 3, 3);
+                                child.material.side = THREE.FrontSide;
+                                child.castShadow = ENABLE_SHADOW;
+                                child.receiveShadow = ENABLE_SHADOW;
                                 console.log(child.material);
                             }
                         });
@@ -166,12 +172,18 @@
         let entranceGeometry = new THREE.BoxGeometry(20, 2, 10);
         let pillarGeometry = new THREE.CylinderGeometry(1, 0.5, 22.5, 64);
 
-        groundMesh = createMesh(groundGeometry, GROUND_MATERIAL, DISABLE_SHADOW, ENABLE_SHADOW);
+        groundTexture.wrapS = THREE.RepeatWrapping;
+        groundTexture.wrapT = THREE.RepeatWrapping;
+        groundTexture.repeat.set(100, 100);
+        groundMesh = createMesh(groundGeometry, GROUND_MATERIAL, DISABLE_SHADOW, ENABLE_SHADOW, true);
         wallMesh = createMesh(wallGeometry, WALL_MATERIAL, ENABLE_SHADOW, ENABLE_SHADOW);
         roofMesh = createMesh(roofGeometry, ROOF_MATERIAL, ENABLE_SHADOW, ENABLE_SHADOW);
         entranceMesh = createMesh(entranceGeometry, ENTRANCE_MATERIAL, ENABLE_SHADOW, ENTRANCE_MATERIAL);
         leftPillarMesh = createMesh(pillarGeometry, PILLAR_MATERIAL, ENABLE_SHADOW, ENABLE_SHADOW);
         rightPillarMesh = createMesh(pillarGeometry, PILLAR_MATERIAL, ENABLE_SHADOW, ENABLE_SHADOW);
+
+        //meshLoaded.receiveShadow = ENABLE_SHADOW;
+        //meshLoaded.castShadow = ENABLE_SHADOW;
 
         positionObjects();
 
@@ -190,6 +202,7 @@
         scene.add(entranceMesh);
         scene.add(leftPillarMesh);
         scene.add(rightPillarMesh);
+        scene.add(meshLoaded);
     }
 
     function positionObjects() {
@@ -243,7 +256,8 @@
     }
 
     // Meshing related functions
-    function createMesh(geometry, materialProp, castShadows = false, receiveShadow = false, isTextured = false) {
+    function createMesh(geometry, materialProp, castShadows = false, receiveShadow = false, isTextured = false,
+                        texture = groundTexture) {
         let material = new THREE.MeshPhongMaterial(materialProp);
         if (isTextured) {
             material.map = texture;
@@ -312,6 +326,5 @@
     }
 
 </script>
-<a href="http://www.freepik.com">Texture license: Designed by Freepik</a>
 </body>
 </html>
