@@ -23,7 +23,7 @@
     // Meshes used in scenes, they are predefined
     let groundMesh, wallMesh, roofMesh, entranceMesh, leftPillarMesh, rightPillarMesh;
 
-    let meshLoaded;
+    let meshLoadedTrain;
 
     // Lights used in scenes, they are predefined
     let ambientLight, pointLight, spotLight;
@@ -116,7 +116,7 @@
                 new OBJLoader()
                     .setMaterials(materials)
                     .load(OBJFile, function (object) {
-                        meshLoaded = object;
+                        meshLoadedTrain = object;
                         console.log(object);
 
                         object.traverse(function (child) {
@@ -174,7 +174,7 @@
         scene.add(entranceMesh);
         scene.add(leftPillarMesh);
         scene.add(rightPillarMesh);
-        scene.add(meshLoaded);
+        scene.add(meshLoadedTrain);
     }
 
     function positionObjects() {
@@ -196,6 +196,10 @@
         leftPillarMesh.position.y += 10;
         leftPillarMesh.position.z += 16;
         leftPillarMesh.position.x -= 8;
+
+        meshLoadedTrain.position.y += 5.8;
+        meshLoadedTrain.position.z += 50;
+        meshLoadedTrain.rotateY(THREE.MathUtils.degToRad(90));
     }
 
     // Ligthing related functions
